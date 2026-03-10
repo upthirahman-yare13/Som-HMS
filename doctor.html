@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhakhtarka | Som-HMS</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Som-HMS 🏥</h2>
+        <nav>
+            <a href="index.html">🏠 Dashboard</a>
+            <a href="reception.html">✍️ Reception</a>
+            <a href="doctor.html" class="active">👨‍⚕️ Dhakhtarka</a>
+            <a href="lab.html">🔬 Shaybaarka</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h1>Dashboard-ka Dhakhtarka</h1>
+            <p>Bukaanada hadda kugu sugaya safka</p>
+        </header>
+
+        <div id="queue-list" class="stats-grid" style="display: block;">
+            <p>Raadinaya bukaanada safka jira...</p>
+        </div>
+
+        <div id="exam-form" style="display:none; background: white; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+            <h2 id="current-patient-name">Magaca Bukaanka</h2>
+            <hr>
+            <label>Natiijada Baaritaanka / Cabashada:</label>
+            <textarea id="dr-notes" style="width:100%; height:100px; margin-bottom: 15px;"></textarea>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="sendToLab()" style="background: #e67e22; color: white; padding: 10px 20px; border:none; border-radius: 5px; cursor:pointer;">🔬 U dir Shaybaarka</button>
+                <button onclick="sendToPharmacy()" style="background: #27ae60; color: white; padding: 10px 20px; border:none; border-radius: 5px; cursor:pointer;">💊 Qor Dawo</button>
+                <button onclick="finishVisit()" style="background: #2c3e50; color: white; padding: 10px 20px; border:none; border-radius: 5px; cursor:pointer;">✅ Dhameey</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let activePatientId = null;
+
+        // 1. Soo saar bukaanada sugaya dhakhtarka
+        db.ref('queue').on('value', (snap) => {
+            const list = document.getElementById('queue-list');
+            list.innerHTML = "";
+            snap.forEach(child => {
+                const data = child.val();
+                if(data.status === "sugaya") {
+                    let card = `<div class="stat-card" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <span><strong>${data.name}</strong> - ${data.doctor}</span>
+                        <button onclick="startExam('${child.key}', '${data.name}')" style="background:#3498db; color:white; border:none; padding:5px 15px; border-radius:5px; cursor:pointer;">Arag Bukaanka</button>
+                    </div>`;
+                    list.innerHTML += card;
+                }
+            });
+        });
+
+        function startExam(id, name) {
+            activePatientId = id;
+            document.getElementById('current-patient-name').innerText = "Bukaanka: " + name;
+            document.getElementById('exam-form').style.display = "block";
+        }
+
+        function sendToLab() {
+            const notes = document.getElementById('dr-notes').value;
+            db.ref('lab_requests/' + activePatientId).set({
+                notes: notes,
+                status: "pending"
+            });
+            alert("Bukaanka waxaa loo diray Shaybaarka!");
+        }
+
+        function finishVisit() {
+            db.ref('queue/' + activePatientId).update({ status: "finished" });
+            document.getElementById('exam-form').style.display = "none";
+            alert("Booqashadii waa la dhameeyay!");
+        }
+    </script>
+</body>
+</html>
