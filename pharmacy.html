@@ -1,78 +1,13 @@
-<!DOCTYPE html>
-<html lang="so">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmashiyaha | Som-HMS</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-</head>
-<body>
-    <div class="sidebar">
-        <h2>Som-HMS 🏥</h2>
-        <nav>
-            <a href="index.html">🏠 Dashboard</a>
-            <a href="reception.html">✍️ Reception</a>
-            <a href="doctor.html">👨‍⚕️ Dhakhtarka</a>
-            <a href="lab.html">🔬 Shaybaarka</a>
-            <a href="pharmacy.html" class="active">💊 Farmashiyaha</a>
-        </nav>
-    </div>
+<script src="app.js"></script>
+<div class="card">
+    <h3>Farmashiyaha: Bukaanka sugaya daawada</h3>
+    <p id="pharm-name">-</p>
+</div>
 
-    <div class="main-content">
-        <header>
-            <h1>Nidaamka Farmashiyaha</h1>
-            <p>Bukaanada sugaya daawada</p>
-        </header>
-
-        <div id="pharmacy-queue" class="stats-grid" style="display: block;">
-            </div>
-
-        <div id="dispense-form" style="display:none; background: white; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <h2 id="patient-name-pharma">Bixinta Daawada</h2>
-            <div id="prescribed-meds" style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 15px; border-left: 5px solid #27ae60;">
-                </div>
-            <button onclick="deliverMeds()" style="background: #27ae60; color: white; padding: 12px 25px; border:none; border-radius: 5px; cursor:pointer; width: 100%; font-size: 16px;">
-                ✅ Daawada waa la bixiyay (Finish)
-            </button>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-    <script>
-        let currentPharmaId = null;
-
-        // 1. Soo saar xogta daawada ee "pending" ah
-        db.ref('prescriptions').on('value', (snap) => {
-            const list = document.getElementById('pharmacy-queue');
-            list.innerHTML = "";
-            snap.forEach(child => {
-                const data = child.val();
-                if(data.status === "pending") {
-                    let card = `<div class="stat-card" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                        <span><strong>Bukaan:</strong> ${data.patientName}</span>
-                        <button onclick="showPrescription('${child.key}', '${data.patientName}', '${data.meds}')" style="background:#27ae60; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Arag Daawada</button>
-                    </div>`;
-                    list.innerHTML += card;
-                }
-            });
-        });
-
-        function showPrescription(id, name, meds) {
-            currentPharmaId = id;
-            document.getElementById('patient-name-pharma').innerText = "Bukaan: " + name;
-            document.getElementById('prescribed-meds').innerHTML = "<strong>Daawada la qoray:</strong><br>" + meds;
-            document.getElementById('dispense-form').style.display = "block";
-        }
-
-        function deliverMeds() {
-            db.ref('prescriptions/' + currentPharmaId).update({
-                status: "delivered"
-            });
-            alert("Daawada waa la bixiyay, bukaankuna waa dhammaystay!");
-            document.getElementById('dispense-form').style.display = "none";
-        }
-    </script>
-</body>
-</html>
+<script>
+    // Wuxuu akhrinayaa xogta markii dhakhtarku soo gudbiyo
+    db.ref('pharmacy_queue').on('value', (snap) => {
+        const p = snap.val();
+        document.getElementById('pharm-name').innerText = p ? p.name : "Ma jiro bukaan";
+    });
+</script>
