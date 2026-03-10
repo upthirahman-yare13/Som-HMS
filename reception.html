@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reception | Som-HMS</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Som-HMS 🏥</h2>
+        <nav>
+            <a href="index.html">🏠 Dashboard</a>
+            <a href="reception.html" class="active">✍️ Reception</a>
+            <a href="doctor.html">👨‍⚕️ Dhakhtarka</a>
+            <hr>
+            <p style="padding: 10px; font-size: 12px;">Accounting Mode On ✅</p>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h1>Diiwaangelinta & Lacag-qabashada</h1>
+        </header>
+
+        <div class="form-container" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px;">
+            <div style="margin-bottom: 15px;">
+                <label>Magaca Bukaan:</label>
+                <input type="text" id="p-name" style="width: 100%; padding: 10px; margin-top: 5px;">
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label>Dhakhtarka loo socdo:</label>
+                <select id="p-doctor" style="width: 100%; padding: 10px; margin-top: 5px;">
+                    <option value="Dr. Axmed">Dr. Axmed (General)</option>
+                    <option value="Dr. Sahra">Dr. Sahra (Pediatric)</option>
+                    <option value="Dr. Cali">Dr. Cali (Surgery)</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label>Lacagta ($):</label>
+                <input type="number" id="p-fee" value="10.00" style="width: 100%; padding: 10px; margin-top: 5px; font-weight: bold; color: green;">
+            </div>
+
+            <button onclick="savePatient()" style="background: #27ae60; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px;">
+                Diiwaangeli & Keydi Lacagta
+            </button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        function savePatient() {
+            const name = document.getElementById('p-name').value;
+            const doctor = document.getElementById('p-doctor').value;
+            const fee = parseFloat(document.getElementById('p-fee').value);
+            const date = new Date().toISOString().split('T')[0];
+
+            if(name === "") { alert("Fadlan geli magaca!"); return; }
+
+            const pId = Date.now();
+
+            // 1. Keydi Transaction-ka (Lacagta)
+            db.ref('transactions/' + pId).set({
+                name: name,
+                doctor: doctor,
+                amount: fee,
+                date: date
+            });
+
+            // 2. U dir Safka (Queue)
+            db.ref('queue/' + pId).set({
+                name: name,
+                doctor: doctor,
+                status: "sugaya"
+            });
+
+            // 3. Cusboonaysii Dakhliga Maanta (Accounting)
+            db.ref('stats/daily/' + date + '/revenue').transaction(curr => (curr || 0) + fee);
+            db.ref('stats/daily/' + date + '/count').transaction(curr => (curr || 0) + 1);
+
+            alert("Bukaanka waa la keydiyay!");
+            document.getElementById('p-name').value = "";
+        }
+    </script>
+</body>
+</html>
