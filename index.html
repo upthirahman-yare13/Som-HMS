@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Som-HMS | Nidaamka Isbitaalka</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Som-HMS 🏥</h2>
+        <nav>
+            <a href="index.html" class="active">🏠 Dashboard</a>
+            <a href="reception.html">✍️ Reception</a>
+            <a href="doctor.html">👨‍⚕️ Dhakhtarka</a>
+            <a href="lab.html">🔬 Shaybaarka</a>
+            <a href="pharmacy.html">💊 Farmashiyaha</a>
+            <hr>
+            <a href="reports.html">📊 Warbixinta Lacagta</a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h1>Maamulka Guud ee Isbitaalka</h1>
+            <p id="date-now"></p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Bukaanada Maanta</h3>
+                <h2 id="today-patients">0</h2>
+            </div>
+            <div class="stat-card green">
+                <h3>Dakhliga Maanta ($)</h3>
+                <h2 id="today-revenue">0.00</h2>
+            </div>
+            <div class="stat-card blue">
+                <h3>Bukaanada Sugaya</h3>
+                <h2 id="waiting-count">0</h2>
+            </div>
+        </div>
+
+        <div class="recent-activity">
+            <h3>Diiwaankii ugu dambeeyay</h3>
+            <table id="recent-table">
+                <thead>
+                    <tr>
+                        <th>Magaca</th>
+                        <th>Dhakhtarka</th>
+                        <th>Lacagta ($)</th>
+                        <th>Xaaladda</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
