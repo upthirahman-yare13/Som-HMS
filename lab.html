@@ -1,85 +1,17 @@
-<!DOCTYPE html>
-<html lang="so">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shaybaarka | Som-HMS</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-</head>
-<body>
-    <div class="sidebar">
-        <h2>Som-HMS 🏥</h2>
-        <nav>
-            <a href="index.html">🏠 Dashboard</a>
-            <a href="reception.html">✍️ Reception</a>
-            <a href="doctor.html">👨‍⚕️ Dhakhtarka</a>
-            <a href="lab.html" class="active">🔬 Shaybaarka</a>
-        </nav>
+<script src="app.js"></script>
+<div class="card">
+    <h2>🔬 Shaybaarka (Lab)</h2>
+    <div id="lab-queue">
+        <p>Bukaanka sugaya: <span id="lab-patient">-</span></p>
+        <p>Nooca baadhitaanka: <span id="lab-test">-</span></p>
     </div>
+</div>
 
-    <div class="main-content">
-        <header>
-            <h1>Nidaamka Shaybaarka (Lab)</h1>
-            <p>Baaritaanada sugaya in la sameeyo</p>
-        </header>
-
-        <div id="lab-queue" class="stats-grid" style="display: block;">
-            </div>
-
-        <div id="result-form" style="display:none; background: white; padding: 20px; border-radius: 10px; margin-top: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-            <h2 id="patient-name-lab">Natiijada Baaritaanka</h2>
-            <p id="dr-request" style="color: #e67e22; font-weight: bold;"></p>
-            <hr>
-            <label>Geli Natiijada (Lab Result):</label>
-            <textarea id="lab-result" style="width:100%; height:100px; margin-bottom: 15px; border: 1px solid #ddd; padding: 10px;"></textarea>
-            
-            <button onclick="submitResult()" style="background: #3498db; color: white; padding: 12px 25px; border:none; border-radius: 5px; cursor:pointer; width: 100%;">
-                Guji si aad Natiijada u dirto
-            </button>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-    <script>
-        let currentLabId = null;
-
-        // 1. Soo saar codsiyada Shaybaarka ee "pending" ah
-        db.ref('lab_requests').on('value', (snap) => {
-            const list = document.getElementById('lab-queue');
-            list.innerHTML = "";
-            snap.forEach(child => {
-                const data = child.val();
-                if(data.status === "pending") {
-                    let card = `<div class="stat-card" style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                        <span><strong>Codsiga:</strong> ${data.notes}</span>
-                        <button onclick="openLabForm('${child.key}', '${data.notes}')" style="background:#e67e22; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">Bilow Baaritaanka</button>
-                    </div>`;
-                    list.innerHTML += card;
-                }
-            });
-        });
-
-        function openLabForm(id, notes) {
-            currentLabId = id;
-            document.getElementById('dr-request').innerText = "Dalabka Dhakhtarka: " + notes;
-            document.getElementById('result-form').style.display = "block";
-        }
-
-        function submitResult() {
-            const result = document.getElementById('lab-result').value;
-            if(result === "") return alert("Fadlan geli natiijada!");
-
-            db.ref('lab_requests/' + currentLabId).update({
-                result: result,
-                status: "completed"
-            });
-
-            alert("Natiijada waa la diray!");
-            document.getElementById('result-form').style.display = "none";
-            document.getElementById('lab-result').value = "";
-        }
-    </script>
-</body>
-</html>
+<script>
+    // Waxay akhrinaysaa xogta 'lab_queue' ee Dhakhtarku soo diray
+    db.ref('lab_queue').on('value', (snap) => {
+        const p = snap.val();
+        document.getElementById('lab-patient').innerText = p ? p.name : "Ma jiro bukaan";
+        document.getElementById('lab-test').innerText = p ? p.testType : "N/A";
+    });
+</script>
