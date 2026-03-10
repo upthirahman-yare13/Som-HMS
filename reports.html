@@ -1,37 +1,12 @@
-<div class="main-content">
-    <h1>Warbixinta Dakhliga</h1>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Wadarta Dakhliga Maanta</h3>
-            <h2 id="total-revenue">0.00</h2>
-        </div>
-    </div>
-    <table style="width:100%; background:white; margin-top:20px; border-collapse: collapse;">
-        <thead>
-            <tr style="background:#2c3e50; color:white;">
-                <th style="padding:10px;">Magaca</th>
-                <th>Lacagta ($)</th>
-                <th>Taariikhda</th>
-            </tr>
-        </thead>
-        <tbody id="revenue-list"></tbody>
-    </table>
+<script src="app.js"></script>
+<div class="card">
+    <h2>Dakhliga Maanta: <span id="total">$0</span></h2>
 </div>
 
 <script>
-db.ref('queue').on('value', (snap) => {
-    let total = 0;
-    const list = document.getElementById('revenue-list');
-    list.innerHTML = "";
-    snap.forEach(child => {
-        const data = child.val();
-        total += data.fee;
-        list.innerHTML += `<tr>
-            <td style="padding:10px; border-bottom:1px solid #ddd;">${data.name}</td>
-            <td>$${data.fee}</td>
-            <td>${data.date}</td>
-        </tr>`;
+    db.ref('patient_history').on('value', (snap) => {
+        let total = 0;
+        snap.forEach(child => { total += child.val().fee; });
+        document.getElementById('total').innerText = "$" + total;
     });
-    document.getElementById('total-revenue').innerText = "$" + total.toFixed(2);
-});
 </script>
