@@ -2,88 +2,129 @@
 <html lang="so">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reception | Som-HMS</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <title>CareQueue | Reception</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <style>
+        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .login-box { background: var(--card); padding: 40px; border-radius: 12px; width: 350px; text-align: center; border: 1px solid var(--blue); }
+        
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; display: none; } 
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; }
+        h2 { color: var(--gold); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        #pFee { border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
+        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }
+        th { color: var(--gold); }
+        .search-box { margin-bottom: 15px; border: 2px solid var(--blue); }
+    </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h2>Som-HMS 🏥</h2>
-        <nav>
-            <a href="index.html">🏠 Dashboard</a>
-            <a href="reception.html" class="active">✍️ Reception</a>
-            <a href="doctor.html">👨‍⚕️ Dhakhtarka</a>
-            <hr>
-            <p style="padding: 10px; font-size: 12px;">Accounting Mode On ✅</p>
-        </nav>
-    </div>
 
-    <div class="main-content">
-        <header>
-            <h1>Diiwaangelinta & Lacag-qabashada</h1>
-        </header>
-
-        <div class="form-container" style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px;">
-            <div style="margin-bottom: 15px;">
-                <label>Magaca Bukaan:</label>
-                <input type="text" id="p-name" style="width: 100%; padding: 10px; margin-top: 5px;">
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                <label>Dhakhtarka loo socdo:</label>
-                <select id="p-doctor" style="width: 100%; padding: 10px; margin-top: 5px;">
-                    <option value="Dr. Axmed">Dr. Axmed (General)</option>
-                    <option value="Dr. Sahra">Dr. Sahra (Pediatric)</option>
-                    <option value="Dr. Cali">Dr. Cali (Surgery)</option>
-                </select>
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <label>Lacagta ($):</label>
-                <input type="number" id="p-fee" value="10.00" style="width: 100%; padding: 10px; margin-top: 5px; font-weight: bold; color: green;">
-            </div>
-
-            <button onclick="savePatient()" style="background: #27ae60; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px;">
-                Diiwaangeli & Keydi Lacagta
-            </button>
+    <div id="login-overlay">
+        <div class="login-box">
+            <h2>RECEPTION LOGIN</h2>
+            <input type="email" id="loginEmail" placeholder="Email">
+            <input type="password" id="loginPass" placeholder="Password">
+            <button class="btn" onclick="handleLogin()">GALO</button>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <div id="admin-content" style="padding: 10px;">
+        <h2>CAREQUEUE RECEPTION</h2>
+        <div class="grid" id="mainGrid">
+            <div class="card">
+                <h3>Diiwaangelinta Bukaanka</h3>
+                <input type="text" id="pName" placeholder="Magaca Bukaanka">
+                <input type="text" id="pNum" placeholder="Lambar Tikidh">
+                <input type="tel" id="pPhone" placeholder="Mobile-ka Bukaanka">
+                <input type="text" id="dName" placeholder="Magaca Dhakhtarka">
+                <input type="number" id="pRoom" placeholder="Qolka Dhakhtarka">
+                <input type="number" id="pFee" value="10">
+                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
+            </div>
+
+            <div class="card">
+                <h3>Bukaanadii Hore (<span id="qCount">0</span>)</h3>
+                <input type="text" id="search" class="search-box" onkeyup="searchTable()" placeholder="Raadi...">
+                <div style="max-height: 450px; overflow-y: auto;">
+                    <table>
+                        <thead><tr><th>Tikidh</th><th>Bukaanka</th><th>Mobile</th><th>Dhakhtarka</th><th>Action</th></tr></thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        function savePatient() {
-            const name = document.getElementById('p-name').value;
-            const doctor = document.getElementById('p-doctor').value;
-            const fee = parseFloat(document.getElementById('p-fee').value);
-            const date = new Date().toISOString().split('T')[0];
+        const firebaseConfig = { 
+            apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA",
+            authDomain: "carequeue-manager.firebaseapp.com",
+            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com",
+            projectId: "carequeue-manager",
+            storageBucket: "carequeue-manager.appspot.com",
+            messagingSenderId: "328741466836",
+            appId: "1:328741466836:web:d073eb2a501944e6fa8141"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
 
-            if(name === "") { alert("Fadlan geli magaca!"); return; }
+        function handleLogin() {
+            auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPass').value)
+            .catch(err => alert("Khalad: " + err.message));
+        }
 
-            const pId = Date.now();
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('mainGrid').style.display = 'grid';
+                loadHistory(); 
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('mainGrid').style.display = 'none';
+            }
+        });
 
-            // 1. Keydi Transaction-ka (Lacagta)
-            db.ref('transactions/' + pId).set({
-                name: name,
-                doctor: doctor,
-                amount: fee,
-                date: date
+        function sendToTV() {
+            const name = document.getElementById('pName').value, num = document.getElementById('pNum').value, 
+                  phone = document.getElementById('pPhone').value, room = document.getElementById('pRoom').value,
+                  doc = document.getElementById('dName').value, fee = document.getElementById('pFee').value;
+
+            if(name && num && phone && room && doc && fee) {
+                db.ref('live_queue').set({ name, num, room, doctor: doc });
+                db.ref('patient_history').push({ name, num, phone, room, doctor: doc, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+                alert("Waa la keydiyay!");
+                document.getElementById('pName').value = ""; document.getElementById('pNum').value = ""; document.getElementById('pPhone').value = "";
+            } else { alert("Fadlan buuxi dhammaan meelaha!"); }
+        }
+
+        function loadHistory() {
+            db.ref('patient_history').on('value', (snap) => {
+                const tbody = document.getElementById('historyBody');
+                document.getElementById('qCount').innerText = snap.numChildren();
+                tbody.innerHTML = "";
+                snap.forEach((child) => {
+                    const item = child.val();
+                    tbody.insertAdjacentHTML('afterbegin', `<tr><td><b>${item.num}</b></td><td>${item.name}</td><td>${item.phone}</td><td>${item.doctor}</td><td><button onclick="db.ref('patient_history').child('${child.key}').remove()" style="background:var(--red); color:white; border:none; padding:4px; cursor:pointer;">Tirtir</button></td></tr>`);
+                });
             });
+        }
 
-            // 2. U dir Safka (Queue)
-            db.ref('queue/' + pId).set({
-                name: name,
-                doctor: doctor,
-                status: "sugaya"
-            });
-
-            // 3. Cusboonaysii Dakhliga Maanta (Accounting)
-            db.ref('stats/daily/' + date + '/revenue').transaction(curr => (curr || 0) + fee);
-            db.ref('stats/daily/' + date + '/count').transaction(curr => (curr || 0) + 1);
-
-            alert("Bukaanka waa la keydiyay!");
-            document.getElementById('p-name').value = "";
+        function searchTable() {
+            let input = document.getElementById("search").value.toUpperCase();
+            let tr = document.getElementById("historyBody").getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) tr[i].style.display = tr[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
         }
     </script>
 </body>
