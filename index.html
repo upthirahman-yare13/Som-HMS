@@ -2,66 +2,112 @@
 <html lang="so">
 <head>
     <meta charset="UTF-8">
-    <title>CareQueue | Full System</title>
+    <title>CareQueue | Dashboard</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
     <style>
-        /* CSS-kaaga halkan geli */
+        :root { --blue: #2563eb; --gold: #fbbf24; --dark: #0f172a; --card: #1e293b; --red: #ef4444; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        .sidebar-nav { background: var(--card); padding: 10px; margin-bottom: 20px; border-radius: 8px; display: flex; gap: 10px; justify-content: center; }
+        .sidebar-nav a { color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; background: #334155; cursor: pointer; }
+        .sidebar-nav a.active { background: var(--blue); }
         .content-section { display: none; }
         .active-section { display: block; }
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 20px; }
+        .card { background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; }
+        .btn { background: var(--blue); color: white; padding: 15px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }
     </style>
 </head>
 <body>
 
     <div class="sidebar-nav">
-        <a href="#" onclick="showSection('reception-section')">✍️ Reception</a>
-        <a href="#" onclick="showSection('doctor-section')">👨‍⚕️ Dhakhtarka</a>
-        <a href="#" onclick="showSection('pharmacy-section')">💊 Farmashiyaha</a>
+        <a onclick="showSection('reception-section', this)" class="active">✍️ Reception</a>
+        <a onclick="showSection('doctor-section', this)">👨‍⚕️ Dhakhtarka</a>
     </div>
 
     <div id="reception-section" class="content-section active-section">
-        <h2>RECEPTION CONTROL</h2>
-        </div>
-
-    <div id="doctor-section" class="content-section">
-        <h2>QAYBTA DHAKHTARKA</h2>
-        <div class="card">
-            <h3>Bukaanka Hadda Sugaya</h3>
-            <p>Magaca: <span id="doc-pName">-</span></p>
-            <button class="btn" onclick="finishPatient()">Bukaanka Wuu Dhamaaday</button>
+        <div class="grid">
+            <div class="card">
+                <h3>Diiwaangelinta</h3>
+                <input type="text" id="pName" placeholder="Magaca">
+                <input type="text" id="pNum" placeholder="Tikidh">
+                <input type="tel" id="pPhone" placeholder="Mobile">
+                <input type="text" id="dName" placeholder="Dhakhtar">
+                <input type="number" id="pRoom" placeholder="Qolka">
+                <button class="btn" onclick="sendToTV()">U DIR TV-GA & KEYDI</button>
+            </div>
+            <div class="card">
+                <h3>Bukaanadii Hore</h3>
+                <table id="historyTable">
+                    <thead><tr><th>Tikidh</th><th>Magaca</th><th>Mobile</th><th>Dhakhtar</th></tr></thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <div id="pharmacy-section" class="content-section">
-        <h2>QAYBTA FARMASHIYAHA</h2>
+    <div id="doctor-section" class="content-section">
         <div class="card">
-            <h3>Daawada loo qoray</h3>
-            <p id="pharmacy-info">Sugid...</p>
+            <h3>Bukaanka Hadda Sugaya</h3>
+            <p>Magaca: <span id="doc-pName">-</span></p>
+            <p>Tikidh: <span id="doc-pNum">-</span></p>
+            <button class="btn" onclick="finishPatient()" style="background:var(--red)">Bukaanka Wuu Dhamaaday</button>
         </div>
     </div>
 
     <script>
-        // FUNCTION-KA KALA BEDDELA QAYBAHA
-        function showSection(sectionId) {
+        const firebaseConfig = { 
+            apiKey: "AIzaSyB5LuhewiHycIpkMWq-3HUW8yRlsSy4fLA",
+            databaseURL: "https://carequeue-manager-default-rtdb.firebaseio.com",
+            projectId: "carequeue-manager"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function showSection(id, element) {
             document.querySelectorAll('.content-section').forEach(s => s.style.display = 'none');
-            document.getElementById(sectionId).style.display = 'block';
+            document.getElementById(id).style.display = 'block';
+            document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+            element.classList.add('active');
         }
 
-        // LOGIC-GA DHAKHTARKA (Si toos ah ula socda live_queue)
+        function sendToTV() {
+            const name = document.getElementById('pName').value, num = document.getElementById('pNum').value;
+            const phone = document.getElementById('pPhone').value, room = document.getElementById('pRoom').value;
+            const doc = document.getElementById('dName').value;
+            
+            db.ref('live_queue').set({ name, num, room, doctor: doc });
+            db.ref('patient_history').push({ name, num, phone, room, doctor: doc, time: new Date().toLocaleTimeString() });
+            alert("Waa la keydiyay!");
+        }
+
+        // Dhakhtarka Real-time Update
         db.ref('live_queue').on('value', (snap) => {
             const p = snap.val();
             if(p) {
                 document.getElementById('doc-pName').innerText = p.name;
+                document.getElementById('doc-pNum').innerText = p.num;
             } else {
-                document.getElementById('doc-pName').innerText = "Ma jiro bukaan sugaya";
+                document.getElementById('doc-pName').innerText = "-";
             }
         });
 
-        function finishPatient() {
-            db.ref('live_queue').remove();
-            alert("Bukaanka waa la dhammaystiray!");
-        }
+        function finishPatient() { db.ref('live_queue').remove(); }
+
+        // Loading History
+        db.ref('patient_history').on('value', (snap) => {
+            const tbody = document.getElementById('historyBody');
+            tbody.innerHTML = "";
+            snap.forEach((child) => {
+                const item = child.val();
+                tbody.insertAdjacentHTML('afterbegin', `<tr><td>${item.num}</td><td>${item.name}</td><td>${item.phone}</td><td>${item.doctor}</td></tr>`);
+            });
+        });
     </script>
 </body>
 </html>
